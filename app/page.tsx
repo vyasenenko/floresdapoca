@@ -160,6 +160,7 @@ export default function Home() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         path: window.location.pathname,
+        url: window.location.href,
         referrer: document.referrer || null,
       }),
       keepalive: true,

@@ -7,7 +7,18 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type Body = { path?: string; referrer?: string | null };
+type Body = { path?: string; url?: string; referrer?: string | null };
+
+function resolveVisitUrl(request: Request, body: Body): string | null {
+  if (body.url) return body.url;
+
+  const h = request.headers;
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  if (!host) return body.path ?? null;
+
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  return `${proto}://${host}${body.path ?? ""}`;
+}
 
 export async function POST(request: Request) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -40,10 +51,12 @@ export async function POST(request: Request) {
     timeZone: "Europe/Lisbon",
   });
 
+  const visitUrl = resolveVisitUrl(request, body);
+
   const text = [
     "🌿 Nova visita — Flores da Poça",
     `🕒 ${when}`,
-    body.path ? `📄 ${body.path}` : null,
+    visitUrl ? `🔗 ${visitUrl}` : null,
     geo ? `📍 ${geo}` : null,
     body.referrer ? `↩️ ${body.referrer}` : null,
     `🖥️ ${ua}`,
