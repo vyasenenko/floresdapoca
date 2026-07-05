@@ -151,6 +151,23 @@ export default function Home() {
     window.localStorage.setItem("lang", lang);
   }, [lang]);
 
+  // Notify the owner's Telegram bot on the first load of each session.
+  useEffect(() => {
+    if (window.sessionStorage.getItem("visit-notified")) return;
+    window.sessionStorage.setItem("visit-notified", "1");
+    fetch("/api/track-visit", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        path: window.location.pathname,
+        referrer: document.referrer || null,
+      }),
+      keepalive: true,
+    }).catch(() => {
+      /* notification is best-effort; never disrupt the page */
+    });
+  }, []);
+
   const goTo = useCallback((e: React.MouseEvent, href: string) => {
     e.preventDefault();
     clearLocationHash();
